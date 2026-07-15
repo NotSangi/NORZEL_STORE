@@ -1,7 +1,9 @@
-from rest_framework import viewsets
-from .models import Category, Product
-from .serializers import CategorySerializer, ProductSerializer
-
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import Category, Product, Collection
+from .serializers import (CategorySerializer, ProductSerializer, CollectionSerializer, AddProductToCollectionSerializer)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -11,4 +13,25 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
 
+class CollectionViewSet(viewsets.ModelViewSet):
+    queryset = Collection.objects.filter(is_active=True)
+    serializer_class = CollectionSerializer
 
+    @action(detail=True, methods=["post"])
+    def agregar_producto(self, request, pk=None):
+        collection = self.get_object()
+        serializer = AddProductToCollectionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = get_object_or_404(Product, pk=serializer.validated_data["product_id"])
+        collection.products.add(product)
+        return Response({"detail": f"Producto {product.id} agregado a la colección"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"])
+    def remover_producto(self, request, pk=None):
+        collection = self.get_object()
+        serializer = AddProductToCollectionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = get_object_or_404(Product, pk=serializer.validated_data["product_id"])
+        collection.products.remove(product)
+        return Response({"detail": f"Producto {product.id} eliminado de la colección"}, status=status.HTTP_200_OK,)
+    
