@@ -2,8 +2,17 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Category, Product, Collection
-from .serializers import (CategorySerializer, ProductSerializer, CollectionSerializer, AddProductToCollectionSerializer)
+from .models import Category, Product, Collection, Color, Size, ProductImage, Variants
+from .serializers import (
+    CategorySerializer,
+    ProductSerializer,
+    CollectionSerializer,
+    ColorSerializer,
+    SizeSerializer,
+    ProductImageSerializer,
+    VariantsSerializer,
+    AddProductToCollectionSerializer,
+)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -12,6 +21,22 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
+
+class ColorViewSet(viewsets.ModelViewSet):
+    queryset = Color.objects.all()
+    serializer_class = ColorSerializer
+
+class SizeViewSet(viewsets.ModelViewSet):
+    queryset = Size.objects.all()
+    serializer_class = SizeSerializer
+
+class ProductImageViewSet(viewsets.ModelViewSet):
+    queryset = ProductImage.objects.all()
+    serializer_class = ProductImageSerializer
+
+class VariantsViewSet(viewsets.ModelViewSet):
+    queryset = Variants.objects.all()
+    serializer_class = VariantsSerializer
 
 class CollectionViewSet(viewsets.ModelViewSet):
     queryset = Collection.objects.filter(is_active=True)
@@ -33,5 +58,4 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         product = get_object_or_404(Product, pk=serializer.validated_data["product_id"])
         collection.products.remove(product)
-        return Response({"detail": f"Producto {product.id} eliminado de la colección"}, status=status.HTTP_200_OK,)
-    
+        return Response({"detail": f"Producto {product.id} eliminado de la colección"}, status=status.HTTP_200_OK)
