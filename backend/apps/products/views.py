@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.db.models import Sum
 from .models import Category, Product, Collection, Color, Size, ProductImage, Variants
 from .serializers import (
     CategorySerializer,
@@ -19,8 +20,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.filter(is_active=True).annotate(stock=Sum("variants__stock"))
     serializer_class = ProductSerializer
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
 class ColorViewSet(viewsets.ModelViewSet):
     queryset = Color.objects.all()
