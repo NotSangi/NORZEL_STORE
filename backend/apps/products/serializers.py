@@ -6,15 +6,24 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ["id", "name", "slug", "description", "parent", "created_at"]
 
+class ProductVariantSerializer(serializers.ModelSerializer):
+    color_name = serializers.CharField(source="color.name", read_only=True)
+    size_name = serializers.CharField(source="size.name", read_only=True)
+
+    class Meta:
+        model = Variants
+        fields = ["id", "name", "color", "color_name", "size", "size_name", "stock", "is_active"]
+
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
+    variants = ProductVariantSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
         fields = [
             "id", "name", "slug", "description", "price", "stock",
             "category", "category_name", "image", "is_active",
-            "created_at", "updated_at",
+            "variants", "created_at", "updated_at",
         ]
 
 class ColorSerializer(serializers.ModelSerializer):
