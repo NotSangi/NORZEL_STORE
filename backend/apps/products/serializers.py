@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from rest_framework import serializers
 from .models import Category, Product, Collection, Color, Size, ProductImage, Variants
 
@@ -6,16 +7,30 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ["id", "name", "slug", "description", "parent", "created_at"]
 
+class ProductVariantSerializer(serializers.ModelSerializer):
+    color_name = serializers.CharField(source="color.name", read_only=True)
+    size_name = serializers.CharField(source="size.name", read_only=True)
+
+    class Meta:
+        model = Variants
+        fields = ["id", "name", "color", "color_name", "size", "size_name", "stock", "is_active"]
+
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name", read_only=True)
+    variants = ProductVariantSerializer(many=True, read_only=True)
+    stock = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Product
         fields = [
             "id", "name", "slug", "description", "price", "stock",
             "category", "category_name", "image", "is_active",
-            "created_at", "updated_at",
+            "variants", "created_at", "updated_at",
         ]
+
+    def get_stock(self, obj):
+        total = obj.variants.aggregate(total=Sum("stock"))["total"]
+        return total or 0
 
 class ColorSerializer(serializers.ModelSerializer):
     class Meta:

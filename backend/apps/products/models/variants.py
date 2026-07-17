@@ -15,6 +15,7 @@ class Variants(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        verbose_name_plural = "variants"
 
     def __str__(self):
         return self.name

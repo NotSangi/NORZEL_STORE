@@ -6,7 +6,6 @@ class Product(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveIntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     image = models.URLField(max_length=500, blank=True, null=True)
     is_active = models.BooleanField(default=True)
