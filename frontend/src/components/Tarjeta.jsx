@@ -23,21 +23,25 @@ export default function Tarjeta() {
   }, []);
 
   return (
-    <div className='flex flex-row items-center justify-between w-full h-60 bg-white border-b border-gray-200 gap-2 px-3'>
-      <div>
-        <div className='flex items-center justify-center w-full h-30 bg-gray-200 px-3'>
-          <img src='./src/assets/images/CARGO 2.png' className='w-25 h-25'/>
-        </div>
-      </div>
-      <div>
-        {productos.map((product) => (
-          <div key={product.id} className='flex flex-col items-start justify-center w-full h-30 gap-2'>
-            <div className='text-[20px] font-[Agdasima] text-gray-800'>{product.name}</div>
-            <div className='text-[16px] font-[Agdasima] text-gray-600'>{product.description}</div>
-            <div className='text-[16px] font-[Agdasima] text-gray-800'>{product.price}</div>
+    <div>
+      {productos.map((product) => (
+        <div key={product.id} className='flex items-center justify-center w-70 h-full bg-white outline-2 outline-white hover:outline-gray-400 transition-all duration-300 hover:cursor-pointer'>
+          <div>
+            <div className='w-70 h-auto bg-gray-100 flex items-center justify-center'>
+              <img src='./src/assets/images/CARGO 2.png' className='w-50 h-50'/>
+            </div>
+            <div className='flex items-start justify-between px-4 py-2 gap-2 text-[18px]'>
+              <div className='w-full h-full bg-white flex flex-col items-center justify-center font-[Agdasima]'>
+                <div className=''>{product.name}</div>
+                <div className='text-gray-400'>{product.description}</div>
+              </div>
+              <div className='w-full h-full bg-white flex justify-end font-[Agdasima]'>
+                <div className=''>${product.price}</div>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

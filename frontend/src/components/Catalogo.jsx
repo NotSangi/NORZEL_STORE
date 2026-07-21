@@ -1,13 +1,17 @@
 import React from "react";
-import { useState, useEffect } from 'react'
+import Tarjeta from './Tarjeta.jsx'
+import { useState,useEffect } from "react";
 
 export default function Catalogo() {
 
   const [productos, setProductos] = useState([]);
   const [error, setError] = useState(null);
-
+  
   useEffect(() => {
     const urlAPI='http://127.0.0.1:8000/api/productos/items/';
+    const urlAPI2='http://127.0.0.1:8000/api/productos/items/';
+
+    fetch(urlAPI2)
 
     fetch(urlAPI)
       .then((response) => {
@@ -23,27 +27,25 @@ export default function Catalogo() {
   }, []);
 
   return (
-    <div className='flex w-full h-full justify-center items-center'>
-      <div className='flex items-center justify-center px-20 py-10 gap-y-5 gap-x-20 grid grid-cols-4 overflow-auto'>
-        {productos.map((product) => (
-          <div key={product.id} className='flex items-center justify-center w-70 h-full bg-white outline-2 outline-white hover:outline-gray-400 transition-all duration-300 hover:cursor-pointer'>
-            <div>
-              <div className='w-70 h-auto bg-gray-100 flex items-center justify-center'>
-                <img src='./src/assets/images/CARGO 2.png' className='w-50 h-50'/>
+    <div className='flex items-center justify-center w-full h-full grid grid-cols-4 px-90 py-20 gap-y-5'>
+      {productos.map((product) => (
+        <div key={product.id} className='flex items-center justify-center w-70 h-full bg-white outline-2 outline-white hover:outline-gray-400 transition-all duration-300 hover:cursor-pointer'>
+          <div className=''>
+            <div className='w-70 h-auto bg-gray-100 flex items-center justify-center'>
+              <img src='./src/assets/images/CARGO 2.png' className='w-50 h-50'/>
+            </div>
+            <div className='flex items-start justify-between px-4 py-2 gap-2 text-[18px]'>
+              <div className='w-full h-full bg-white flex flex-col items-start justify-center font-[Agdasima]'>
+                <div className=''>{product.name}</div>
+                <div className='text-gray-400'>{product.description}</div>
               </div>
-              <div className='flex items-start justify-between px-4 py-2 gap-2 text-[18px]'>
-                <div className='w-full h-full bg-white flex flex-col items-center justify-center font-[Agdasima]'>
-                  <div className=''>{product.name}</div>
-                  <div className='text-gray-400'>{product.description}</div>
-                </div>
-                <div className='w-full h-full bg-white flex justify-end font-[Agdasima]'>
-                  <div className=''>${product.price}</div>
-                </div>
+              <div className='w-full h-full bg-white flex justify-end font-[Agdasima]'>
+                <div className=''>${product.price}</div>
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }
