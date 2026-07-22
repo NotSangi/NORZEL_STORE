@@ -2,8 +2,10 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from django.db.models import Sum
+from django.db.models import Sum, Value
+from django.db.models.functions import Coalesce
 from .models import Category, Product, Collection, Color, Size, ProductImage, Variants
+from .filters import ProductFilter
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -20,8 +22,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.filter(is_active=True).annotate(stock=Sum("variants__stock"))
+    queryset = Product.objects.filter(is_active=True).annotate(stock=Coalesce(Sum("variants__stock"), Value(0)))
     serializer_class = ProductSerializer
+    filterset_class = ProductFilter
 
     def perform_destroy(self, instance):
         instance.is_active = False
