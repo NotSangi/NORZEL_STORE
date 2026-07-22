@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
 from .models import Category, Product, Collection, Color, Size, ProductImage, Variants
-from .filters import ProductFilter
+from .filters import ProductFilter, CategoryFilter
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -20,6 +20,7 @@ from .serializers import (
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    filterset_class = CategoryFilter
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True).annotate(stock=Coalesce(Sum("variants__stock"), Value(0)))
