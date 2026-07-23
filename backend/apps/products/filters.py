@@ -1,5 +1,5 @@
 import django_filters
-from .models import Product, Category, Collection
+from .models import Product, Category, Collection, Color, Size
 
 class ProductFilter(django_filters.FilterSet):
     category = django_filters.ModelChoiceFilter(
@@ -12,6 +12,18 @@ class ProductFilter(django_filters.FilterSet):
         field_name="collections",
         queryset=Collection.objects.all(),
         to_field_name="slug",
+    )
+    
+    color = django_filters.ModelChoiceFilter(
+        field_name="variants__color",
+        queryset=Color.objects.all(),
+        to_field_name="name",
+    )
+    
+    size = django_filters.ModelChoiceFilter(
+        field_name="variants__size",
+        queryset=Size.objects.all(),
+        to_field_name="name",
     )
 
     class Meta:
