@@ -1,16 +1,18 @@
 import React from 'react';
 
-export default function Boton({ texto, tamaño, grosor }) {
+const tamañoTexto = {
+  md: 'text-xl',
+  lg: 'text-3xl',
+  xl: 'text-4xl',
+}
 
-  const tamañoTexto = {
-    md: 'text-[20px]',
-    lg: 'text-[30px]',
-    xl: 'text-[40px]',
-  }
+const grosorTexto = {
+  normal: 'font-normal',
+  medium: 'font-medium',
+  bold: 'font-bold',
+}
 
-  const grosorTexto = {
-    bold: 'font-bold',
-  }
+export default function Boton({ texto, tamaño, grosor, }) {
 
   const claseTamaño = tamañoTexto[tamaño] || tamañoTexto.md;
   const claseGrosor = grosorTexto[grosor] || '';
