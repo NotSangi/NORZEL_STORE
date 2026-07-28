@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Role, User
+from .models import Role, User, Department, City, Adress
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -30,3 +30,29 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ["id", "name"]
+
+class CitySerializer(serializers.ModelSerializer):
+    department_name = serializers.CharField(source="department.name", read_only=True)
+
+    class Meta:
+        model = City
+        fields = ["id", "name", "department", "department_name"]
+
+class AdressSerializer(serializers.ModelSerializer):
+    city_name = serializers.CharField(source="city.name", read_only=True)
+    department_name = serializers.CharField(source="city.department.name", read_only=True)
+
+    class Meta:
+        model = Adress
+        fields = [
+            "id", "name", "city", "city_name",
+            "department_name", "address", 
+            "neighborhood", "zip_code", "additional_info",
+            "is_default", "created_at", "updated_at",
+        ]
+        read_only_fields = ["user"]
