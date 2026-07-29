@@ -25,6 +25,11 @@ class ProductFilter(django_filters.FilterSet):
         queryset=Size.objects.all(),
         to_field_name="name",
     )
+    
+    search = django_filters.CharFilter(
+        field_name="name", 
+        lookup_expr="icontains")
+
 
     class Meta:
         model = Product

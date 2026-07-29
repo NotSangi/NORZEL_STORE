@@ -2,9 +2,15 @@ from rest_framework import viewsets, status, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from .models import Role, User
-from .serializers import RoleSerializer, UserSerializer, RegisterSerializer
-
+from .models import Role, User, Department, City, Adress
+from .serializers import (
+    RoleSerializer,
+    UserSerializer,
+    RegisterSerializer,
+    DepartmentSerializer,
+    CitySerializer,
+    AdressSerializer,
+)
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
@@ -39,3 +45,22 @@ class RegisterView(generics.CreateAPIView):
             {"detail": "Usuario creado exitosamente", "user_id": user.id},
             status=status.HTTP_201_CREATED,
         )
+
+class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
+class CityViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = City.objects.all()
+    serializer_class = CitySerializer
+
+class AdressViewSet(viewsets.ModelViewSet):
+    queryset = Adress.objects.all()
+    serializer_class = AdressSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Adress.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

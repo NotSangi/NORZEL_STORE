@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Role, User
-
+from .models import Role, User, Department, City, Adress
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -22,3 +21,10 @@ class UserAdmin(BaseUserAdmin):
     ordering = ["email"]
 
 admin.site.register(Role)
+admin.site.register(Department)
+admin.site.register(City)
+
+class AdressAdmin(admin.ModelAdmin):
+    list_display = ("user", "name", "address", "city")
+    
+admin.site.register(Adress, AdressAdmin)
