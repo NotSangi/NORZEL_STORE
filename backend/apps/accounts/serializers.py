@@ -20,6 +20,15 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "email", "name", "last_name",
+            "id_type", "id_num", "phone", "birth_date",
+        ]
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
 

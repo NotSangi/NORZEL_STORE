@@ -11,5 +11,6 @@ router.register(r"direcciones", views.AdressViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("perfil/", views.ProfileViewSet.as_view(), name="profile"),
     path("registro/", views.RegisterView.as_view(), name="register"),
 ]
