@@ -6,26 +6,27 @@ export default function FormularioProducto({ onProductoCreado }) {
     description: '',
     price: '',
     slug: '',
-    category: '' // Aquí guardaremos la SUBCATEGORÍA seleccionada (ID)
+    category: '' // ID de la subcategoría elegida
   });
 
-  // Estado separado únicamente para filtrar subcategorías por la API
+  // Estado aislado para guardar solo el slug de la categoría padre seleccionada
   const [categoriaSlug, setCategoriaSlug] = useState({
     slug: ''
   });
 
-  // Estados para listas
+  // Estado para guardar la lista de categorías principales provenientes de la API
   const [categorias, setCategorias] = useState([]);
+
+  // Estado para guardar la lista de subcategorías obtenidas al elegir una categoría padre
   const [subcategorias, setSubcategorias] = useState([]);
 
-  // Estados de carga
   const [cargandoCategorias, setCargandoCategorias] = useState(true);
   const [cargandoSubcategorias, setCargandoSubcategorias] = useState(false);
 
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
 
-  // 1. Obtener categorías padre al montar el componente
+  // Se obtienen las categorías padre al cargar el componente por primera vez
   useEffect(() => {
     const obtenerCategorias = async () => {
       try {
