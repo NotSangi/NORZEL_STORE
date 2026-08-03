@@ -7,7 +7,7 @@ router.register(r"usuarios", views.UserViewSet)
 router.register(r"roles", views.RoleViewSet)
 router.register(r"departamentos", views.DepartmentViewSet)
 router.register(r"ciudades", views.CityViewSet)
-router.register(r"direcciones", views.AdressViewSet)
+router.register(r"direcciones", views.AddressViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

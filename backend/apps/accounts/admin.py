@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Role, User, Department, City, Adress
+from .models import Role, User, Department, City, Address
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
@@ -24,7 +24,7 @@ admin.site.register(Role)
 admin.site.register(Department)
 admin.site.register(City)
 
-class AdressAdmin(admin.ModelAdmin):
+class AddressAdmin(admin.ModelAdmin):
     list_display = ("user", "name", "address", "city")
     
-admin.site.register(Adress, AdressAdmin)
+admin.site.register(Address, AddressAdmin)

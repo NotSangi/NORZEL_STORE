@@ -1,9 +1,10 @@
 from rest_framework import viewsets, status, generics
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Role, User, Department, City, Adress
+from .filters import CityFilter
+from .models import Role, User, Department, City, Address
+from .permissions import IsGeneralAdmin
 from .serializers import (
     RoleSerializer,
     UserSerializer,
@@ -11,26 +12,20 @@ from .serializers import (
     RegisterSerializer,
     DepartmentSerializer,
     CitySerializer,
-    AdressSerializer,
+    AddressSerializer,
 )
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
+    permission_classes = [IsGeneralAdmin]
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_update(self, serializer):
-        if not self.request.user.is_superuser and self.request.user != serializer.instance:
-            raise PermissionDenied("No puedes modificar otros usuarios")
-        serializer.save()
+    permission_classes = [IsGeneralAdmin]
 
     def perform_destroy(self, instance):
-        if not self.request.user.is_superuser and self.request.user != instance:
-            raise PermissionDenied("No puedes eliminar otros usuarios")
         instance.is_active = False
         instance.save()
 
@@ -68,14 +63,15 @@ class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = City.objects.all()
     serializer_class = CitySerializer
+    filterset_class = CityFilter
 
-class AdressViewSet(viewsets.ModelViewSet):
-    queryset = Adress.objects.all()
-    serializer_class = AdressSerializer
+class AddressViewSet(viewsets.ModelViewSet):
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Adress.objects.filter(user=self.request.user)
+        return Address.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
