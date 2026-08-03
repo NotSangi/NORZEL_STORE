@@ -1,81 +1,55 @@
 import React, { useState, useEffect } from 'react';
+import api from '../APIs/axios.js';
+import {Products} from '../APIs/'
 
-export default function FormularioProducto({ onProductoCreado }) {
+const selectStyles = 'text-gray-600 p-2 w-full h-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition bg-white disabled:bg-gray-100 disabled:cursor-not-allowed shadow-md';
+const inputStyles = 'text-gray-600 border border-gray-300 rounded-lg p-2 w-full h-full focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition bg-white disabled:bg-gray-100 disabled:cursor-not-allowed shadow-md';
+
+export default function FormularioProducto({ onCreatedProduct }) {
+
+  //Aqui se guarda la informacion del formulario, para luego enviarla a la base de datos
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
+    category: '',
+    description:'',
     price: '',
     slug: '',
-    category: '' // ID de la subcategoría elegida
-  });
+  })
+  //Aqui se aisla el slug de la categoria padre seleccionada
+  const [slugCategory, setSlugCategory] = useState({
+    slug: '',
+  })
+  //Aqui se guarda la informacion de las categorias padre provenientes de la API
+  const [categories, setCategories] = useState([])
+  //Aqui se guarda la informacion de las subcategorias basadas en la categoria padre seleccionada
+  const [subCategories, setSubCategories] = useState([])
 
-  // Estado aislado para guardar solo el slug de la categoría padre seleccionada
-  const [categoriaSlug, setCategoriaSlug] = useState({
-    slug: ''
-  });
-
-  // Estado para guardar la lista de categorías principales provenientes de la API
-  const [categorias, setCategorias] = useState([]);
-
-  // Estado para guardar la lista de subcategorías obtenidas al elegir una categoría padre
-  const [subcategorias, setSubcategorias] = useState([]);
-
-  const [cargandoCategorias, setCargandoCategorias] = useState(true);
-  const [cargandoSubcategorias, setCargandoSubcategorias] = useState(false);
-
-  const [cargando, setCargando] = useState(false);
-  const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
-
-  // Se obtienen las categorías padre al cargar el componente por primera vez
+  //Se llama la informacion de las categorias padre a traves de la API y se guarda en "setCategories"
   useEffect(() => {
-    const obtenerCategorias = async () => {
-      try {
-        const respuesta = await fetch('http://127.0.0.1:8000/api/productos/categorias/?is_parent=true');
-        if (!respuesta.ok) {
-          throw new Error('No se pudieron cargar las categorías');
-        }
-        const data = await respuesta.json();
-        setCategorias(data);
-      } catch (error) {
-        console.error('Error al obtener categorías:', error);
-      } finally {
-        setCargandoCategorias(false);
-      }
+    const fetchCategories = async () => {
+      const data = await Products.getCategories();
+      setCategories(data);
     };
-
-    obtenerCategorias();
+    fetchCategories();
   }, []);
 
-  // 2. Obtener subcategorías cada vez que cambia 'categoriaSlug.slug'
+  //Se llama la informacion de las subcategorias a traves de la API cada vez que cambia "slugCategory.slug" y se guarda en "setSubCategories"
   useEffect(() => {
-    if (!categoriaSlug.slug) {
-      setSubcategorias([]);
+    if (!slugCategory.slug) {
+      setSubCategories([]);
       return;
     }
 
-    const obtenerSubcategorias = async () => {
-      setCargandoSubcategorias(true);
-      try {
-        const respuesta = await fetch(
-          `http://127.0.0.1:8000/api/productos/categorias/?parent=${categoriaSlug.slug}`
-        );
-        if (!respuesta.ok) {
-          throw new Error('No se pudieron cargar las subcategorías');
-        }
-        const data = await respuesta.json();
-        setSubcategorias(data);
-      } catch (error) {
-        console.error('Error al obtener subcategorías:', error);
-      } finally {
-        setCargandoSubcategorias(false);
-      }
+    const fetchSubCategories = async () => {
+        const data = await Products.getSubCategories(slugCategory.slug);
+        setSubCategories(data);
     };
 
-    obtenerSubcategorias();
-  }, [categoriaSlug.slug]);
+    fetchSubCategories();
+  }, [slugCategory.slug])
 
-  // Helper para generar slug en tiempo real
-  const generarSlug = (texto) => {
+  //Funcion para generar el slug en tiempo real
+  const generateSlug = (texto) => {
     return texto
       .toLowerCase()
       .trim()
@@ -89,12 +63,9 @@ export default function FormularioProducto({ onProductoCreado }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // 1. Si cambia la Categoría Padre
-    if (name === 'categoriaPadre') {
-      // Guardamos el slug en su estado aislado (NO en formData)
-      setCategoriaSlug({ slug: value });
-
-      // Limpiamos la subcategoría guardada previamente en formData
+    //si el <select> llamado "parentcategory" cambia, se guarda el slug dentro de "setSlugCategory" y se limpia la subcategoria guardada previamente en "formData"
+    if (name === 'parentcategory') {
+      setSlugCategory({ slug: value });
       setFormData((prev) => ({
         ...prev,
         category: '',
@@ -103,45 +74,43 @@ export default function FormularioProducto({ onProductoCreado }) {
       return;
     }
 
-    // 2. Manejo general de inputs (incluida la Subcategoría -> formData.categoria)
+    //Se toman los valores de los inputs y se guardan en "formData", si el input es "name" se genera el slug en tiempo real
     setFormData((prev) => {
-      const actualizados = { ...prev, [name]: value };
-
+      const updated = { ...prev, [name]: value };
       if (name === 'name') {
-        actualizados.slug = generarSlug(value);
+        updated.slug = generateSlug(value);
       }
 
-      return actualizados;
+      return updated;
     });
   };
 
+  // useEffect(() => {
+  //     console.log('Formulario que se envia a la base de datos:', formData);
+  //   }, [formData]);
+
+  //funcion para enviar la informacion del formulario a la base de datos
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setCargando(true);
-    setMensaje({ tipo: '', texto: '' });
 
+    //Si algun campo esta vacio se muestra un alert 
+    if (!formData.name || !formData.category || !formData.description || !formData.price || !formData.slug) {
+      alert('Completa todos los campos')
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      price: parseFloat(formData.price)
+    }
+    //Se hace la peticion POST a la API para guardar el producto en la base de datos, si hay algun error se muestra un alert con el error
     try {
-      const respuesta = await fetch('http://127.0.0.1:8000/api/productos/items/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Enviamos únicamente el formData limpio que tu backend espera
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-        }),
-      });
+      const product = await Products.saveProduct(payload);
+      const newProduct = await response.json();
 
-      if (!respuesta.ok) {
-        throw new Error('Ocurrió un error al guardar el producto');
-      }
+      alert('¡¡Producto guardado exitosamente!!');
 
-      const nuevoProducto = await respuesta.json();
-
-      setMensaje({ tipo: 'exito', texto: '¡Producto guardado exitosamente!' });
-
-      // Reiniciamos ambos estados tras guardar
+      //Se reinician los campos del formulario
       setFormData({
         name: '',
         description: '',
@@ -149,84 +118,36 @@ export default function FormularioProducto({ onProductoCreado }) {
         slug: '',
         category: '',
       });
-      setCategoriaSlug({ slug: '' });
+      setSlugCategory({ slug: '' });
 
-      if (onProductoCreado) onProductoCreado(nuevoProducto);
+      //Se llama la funcion "onCreatedProduct" que se pasa como prop desde el componente padre, para actualizar la lista de productos
+      if (onCreatedProduct) onCreatedProduct(newProduct);
     } catch (error) {
-      setMensaje({ tipo: 'error', texto: error.message || 'Error de conexión' });
-    } finally {
-      setCargando(false);
+      console.log({ tipo: 'error', texto: error.message || 'Error de conexión' });
     }
   };
 
   return (
-    <div className='flex-auto justify-center items-center'> 
-      <div className="mt-25 max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-md border border-gray-100 font-[Agdasima]">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">Agregar Nuevo Producto</h2>
-
-        {mensaje.texto && (
-          <div
-            className={`p-4 mb-6 rounded-xl text-lg font-medium ${
-              mensaje.tipo === 'exito'
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}
-          >
-            {mensaje.texto}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nombre */}
-          <div>
-            <label className="block text-xl font-medium text-gray-700 mb-1">
-              Nombre del Producto
-            </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Ej: Camiseta Oversize Verde"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#284631] focus:border-transparent outline-none transition text-lg"
-            />
+    <div className='font-[Agdasima] w-full h-full flex justify-center items-center'>
+      <form onSubmit={handleSubmit} className='text-xl w-full h-full py-30 px-20 flex justify-center items-center '>
+        <div className='flex flex-col w-1/3 h-1/2 flex items-center justify-center gap-8 border border-gray-300 rounded-xl shadow-md py-8 px-12'>
+          <label className='text-4xl font-bold py-4'>Formulario de Productos</label>
+          <div className='flex flex-col w-full'>
+            <label className='ml-2'>Nombre del Producto*</label>
+            <input name='name' type='text' value={formData.name} onChange={handleChange} placeholder='Ej: Camiseta Oversize' className={inputStyles}/>
           </div>
 
-          {/* Slug */}
-          <div>
-            <label className="block font-medium text-gray-700 mb-1 text-xl">
-              Slug (URL)
-            </label>
-            <input
-              type="text"
-              name="slug"
-              value={formData.slug}
-              onChange={handleChange}
-              placeholder="ej-camiseta-oversize-verde"
-              required
-              className="w-full px-4 py-2 border border-gray-200 bg-gray-50 text-gray-600 rounded-xl focus:ring-2 focus:ring-[#284631] outline-none transition text-lg"
-            />
+          <div className='flex flex-col w-full'>
+            <label className='ml-2'>Slug (URL)*</label>
+            <input name='slug' type='text' value={formData.slug} onChange={handleChange} placeholder='Ej: camiseta-oversize' className={inputStyles}/>
           </div>
-
-          {/* Categoría y Subcategoría */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Categoría Padre: name="categoriaPadre" -> guarda directamente el slug en 'categoriaSlug' */}
+        
+          <div className='flex flex-row w-full gap-4'>
             <div>
-              <label className="block font-medium text-gray-700 mb-1 text-xl">
-                Categoría
-              </label>
-              <select
-                name="categoriaPadre"
-                onChange={handleChange}
-                value={categoriaSlug.slug || ''}
-                disabled={cargandoCategorias}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#284631] focus:border-transparent outline-none transition bg-white disabled:bg-gray-100 disabled:cursor-not-allowed text-lg"
-              >
-                <option value="">
-                  {cargandoCategorias ? 'Cargando categorías...' : 'Selecciona una categoría'}
-                </option>
-                {categorias.map((cat) => (
+              <label className='ml-2'>Categoria*</label>
+              <select name='parentcategory' onChange={handleChange} value={slugCategory.slug || ''} className={selectStyles}>
+                <option value=''>{'Selecciona una Categoria'}</option>
+                {categories.map((cat) => (
                   <option key={cat.id} value={cat.slug}>
                     {cat.name}
                   </option>
@@ -234,27 +155,11 @@ export default function FormularioProducto({ onProductoCreado }) {
               </select>
             </div>
 
-            {/* Subcategoría: name="categoria" -> guarda el ID directamente en 'formData.categoria' */}
             <div>
-              <label className="block text-xl font-medium text-gray-700 mb-1">
-                Subcategoría
-              </label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-                disabled={!categoriaSlug.slug || cargandoSubcategorias}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#284631] focus:border-transparent outline-none transition bg-white disabled:bg-gray-100 disabled:cursor-not-allowed text-lg"
-              >
-                <option value="">
-                  {!categoriaSlug.slug
-                    ? 'Primero elige una categoría'
-                    : cargandoSubcategorias
-                    ? 'Cargando subcategorías...'
-                    : 'Selecciona una subcategoría'}
-                </option>
-                {subcategorias.map((sub) => (
+              <label className='ml-2'>Subcategoria*</label>
+              <select name='category' disabled={!slugCategory.slug} onChange={handleChange} value={formData.category} className={selectStyles}>
+                <option value=''>{!slugCategory.slug ? 'Primero selecciona una Categoria' : 'Selecciona una Subcategoria'}</option>
+                {subCategories.map((sub) => (
                   <option key={sub.id} value={sub.id}>
                     {sub.name} ({sub.slug})
                   </option>
@@ -263,48 +168,23 @@ export default function FormularioProducto({ onProductoCreado }) {
             </div>
           </div>
 
-          {/* Precio */}
-          <div>
-            <label className="block text-xl font-medium text-gray-700 mb-1">
-              Precio ($)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              placeholder="29.99"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#284631] focus:border-transparent outline-none transition text-lg"
-            />
+          <div className='flex flex-row w-full gap-10'>
+            <div className='flex flex-col w-full'>
+              <label className='ml-2'>Precio ($)*</label>
+              <input name='price' type='number' value={formData.price} onChange={handleChange} placeholder='50000' className='text-gray-600 border border-gray-300 rounded-lg p-2 w-full max-h-1/3 focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition bg-white disabled:bg-gray-100 disabled:cursor-not-allowed shadow-md'/>
+            </div>
+
+            <div className='flex flex-col w-full'>
+              <label className='ml-2'>Descripcion*</label>
+              <textarea name='description' value={formData.description} onChange={handleChange} placeholder='Detalles sobre el producto' className={inputStyles}/>
+            </div>
           </div>
 
-          {/* Descripción */}
-          <div>
-            <label className="block text-xl font-medium text-gray-700 mb-1">
-              Descripción
-            </label>
-            <textarea
-              name="description"
-              rows="4"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Detalles sobre el producto..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#284631] focus:border-transparent outline-none transition resize-none text-lg"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={cargando || cargandoCategorias}
-            className="w-full bg-[#284631] hover:bg-[#1e3525] text-white font-medium py-3 px-4 rounded-xl transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {cargando ? 'Guardando...' : 'Guardar Producto'}
-          </button>
-        </form>
-      </div>
+            <button type='submit' className='bg-[#284631] text-white px-4 py-2 rounded-lg hover:bg-[#1e3525] transition-colors duration-300 w-1/3 shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
+              Guardar Producto
+            </button>
+        </div>
+      </form>
     </div>
-  );
+  )
 }

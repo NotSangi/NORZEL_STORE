@@ -11,6 +11,7 @@ import FormularioVariantes from './components/FormularioVariantes.jsx';
 
   return (
     <>
+      {/* <Formulario /> */}
       <FormularioVariantes />
     </>
   );
