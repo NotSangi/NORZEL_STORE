@@ -3,6 +3,7 @@ from .department import Department
 
 class City(models.Model):
     name = models.CharField(max_length=100)
+    code = models.CharField(max_length=5, default=0)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name="cities")
 
     class Meta:

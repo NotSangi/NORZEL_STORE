@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from .city import City
 
-class Adress(models.Model):
+class Address(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="directions")
     
     name = models.CharField(max_length=100)
@@ -17,6 +17,7 @@ class Adress(models.Model):
 
     class Meta:
         ordering = ["-is_default", "name"]
+        verbose_name_plural = "Address"
 
     def __str__(self):
         return f"{self.name}: {self.address}"
