@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import api from "../APIs/axios.js";
+import {Products} from '../APIs/'
 
 //Estilos para los <select> y <input> del formulario
 const selectStyles = 'text-gray-600 p-2 w-full h-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none transition bg-white disabled:bg-gray-100 disabled:cursor-not-allowed shadow-md';
@@ -33,84 +35,45 @@ export default function FormularioVariantes() {
 
   //Se llama la informacion de las Categorias Padre y se guarda en "setCatParent". Los colores se guardan en "setColors" y las tallas se guardan en "setSizes"
   useEffect (() => {
-    const getParent = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/api/productos/categorias/?is_parent=true');
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar las Categorias Padre');
-        }
-        const data = await response.json();
-        setCatParent(data);
-      } catch (error) {
-        console.error('Error al obtener Categorias Padre:', error);
-      }
+    const fetchParent = async () => {
+      const data = await Products.getCategories()
+      setCatParent(data)
     }
 
-    const getColors = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/api/productos/colores/');
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar los colores');
-        }
-        const data = await response.json();
-        setColors(data);
-      } catch (error) {
-        console.error('Error al obtener colores:', error);
-      }
+    const fetchColors = async () => {
+      const data = await Products.getColors()
+      setColors(data)
     }
 
-    const getSizes = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:8000/api/productos/tallas/');
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar las tallas');
-        }
-        const data = await response.json();
-        setSizes(data);
-      } catch (error) {
-        console.error('Error al obtener tallas:', error);
-      }
+    const fetchSizes = async () => {
+      const data = await Products.getSizes()
+      setSizes(data)
     }
 
-    getParent();
-    getColors();
-    getSizes();
+
+    fetchParent();
+    fetchColors();
+    fetchSizes();
   }, []);
 
   //Se llama la informacion de las subcategorias basadas en las categorias seleccionadas y se guardan en "setSubCat"
   useEffect (() => {
-    const getSubCat = async () => {
-      try {
-        const response = await fetch(`http://127.0.0.1:8000/api/productos/categorias/?parent=${products.cat}`);
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar las subcategorías');
-        }
-        const data = await response.json();
-        setSubCat(data);
-      } catch (error) {
-        console.error('Error al obtener subcategorías:', error);
-      }
+    const fetchSubCat = async () => {
+      const data = await Products.getSubCategories(products.cat)
+      setSubCat(data)
     }
 
-    getSubCat();
+    fetchSubCat();
   }, [products.cat]);
 
   //Se llama la informacion con la API de los productos basados en las subcategorias seleccionadas y se guardan en "setProductFromSubCat"
   useEffect (() => {
-    const getProducts = async () => {
-      try {
-        const response = await fetch(`http://127.0.0.1:8000/api/productos/items/?category=${products.subcat}`);
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar las subcategorías');
-        }
-        const data = await response.json();
-        setProductFromSubCat(data);
-      } catch (error) {
-        console.error('Error al obtener subcategorías:', error);
-      }
+    const fetchProduct = async () => {
+      const data = await Products.getProductsBySubCategory(products.subcat)
+      setProductFromSubCat(data)
     }
-
-    getProducts();
+    
+    fetchProduct();
   }, [products.subcat]);
   
   //Función para construir el nombre completo
@@ -197,22 +160,16 @@ export default function FormularioVariantes() {
       return;
     }
     
+    const payload = {
+      ...formData,
+      stock: parseInt(formData.stock)
+    }
     //Aqui se hace la peticion de la API con el método POST especificando qué valores son enteros 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/productos/variantes/', {method: 'POST', headers: {'Content-Type' : 'application/json'}, 
-        body: JSON.stringify({
-          ...formData,
-          stock: parseInt(formData.stock)
-        })})
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Ocurrió un error al guardar la variante');
-      }
-
-      const dataSaved = await response.json();
-      console.log('Respuesta de la API:', dataSaved);
-
+      const variant = await Products.saveVariant(payload);
+      alert('¡¡Producto creado exitosamente!!')
+      
       //Se resetean los estados del formulario tras ser guardado con exito
       setFormData({
         name: '',
@@ -234,7 +191,7 @@ export default function FormularioVariantes() {
   return(
     <div className ='w-full h-full flex justify-center items-center'>
       <form className='font-[Agdasima] text-xl w-full h-full py-30 px-20 flex justify-center items-center' onSubmit={handleSubmit}>
-        <div className='flex flex-col w-1/2 h-1/2 flex items-center justify-center gap-8 border border-gray-300 rounded-xl shadow-md p-8'> 
+        <div className='flex flex-col w-1/3 h-1/2 flex items-center justify-center gap-8 border border-gray-300 rounded-xl shadow-md p-8'> 
           <label className='text-4xl font-bold py-8'>Formulario de Variantes</label>
           <div className='flex flex-col gap-6 w-full h-full'>
             <select name='parent' value={products.cat} onChange={handleChange} className={selectStyles}>
@@ -292,7 +249,6 @@ export default function FormularioVariantes() {
               ))}
             </select>
           </div>
-          
           
           <div className='flex flex-col gap-6 w-1/2 h-full'>
             <input name='stock' type='text' value={formData.stock} placeholder='Cantidad:' onChange={handleChange} className={inputStyles}/>
